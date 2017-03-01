@@ -71,10 +71,10 @@ def initlog(level=None, log="-"):
 
 class Round(object):
 
-    def __init__(self, cards, previous):
+    def __init__(self, cards, previous=None):
         '''
         cards: list[int]
-        previous: Round
+        previous: Round ## not used
         '''
         super(Round, self).__init__()
         self.cards = cards
@@ -113,10 +113,11 @@ class Player(object):
         self.cards = cards
         self.paths = []
         self.last_round = None
+        self.rolled_round = None
         self.loss = False
 
     def __repr__(self):
-        return '({} {} {})'.format(self.name, self.cards, self.paths)
+        return '({} {} {})'.format(self.name, self.cards, self.rolled_round)
 
     def __str__(self):
         return '{}'.format(self.name)
@@ -131,15 +132,26 @@ class Player(object):
         return self.loss
 
     def next(self, desktop):
-        should_be_bigger_than = self.last_round if self.last_round else desktop
-        desktop = should_be_bigger_than.next(self.cards[:])
-        if desktop is P and self.paths[1:] and self.paths[-1] is P:
-            self.loss = True
-            return False
-        self.paths.append(desktop)
+        should_be_bigger_than = self.rolled_round if self.rolled_round else desktop
+        desktop = should_be_bigger_than.next(self.cards[:], desktop is P)
+        # Game instance would judge if he losses
+        # if desktop is P and self.paths[1:] and self.paths[-1] is P:
+        # self.loss = True
+        # return False
+        # self.paths.append(desktop)
         for c in desktop.cards:
             self.cards.remove(c)
+        self.rolled_round = None
         return desktop
+
+    def rollback(self, round, active):
+        self.cards.extend(round.cards)
+        # self.paths.pop()
+        if active is True:
+            self.rolled_round = round
+        else:
+            self.rolled_round = None
+        return round
 
     def askfor_roll_back(self):
         '''
@@ -177,7 +189,7 @@ class Player(object):
 class Game(object):
     """docstring for Game"""
 
-    def __init__(self, players = [], current_player=None):
+    def __init__(self, players=[], current_player=None):
         super(Game, self).__init__()
         self.paths = []
         self.desktop = P
@@ -191,9 +203,23 @@ class Game(object):
     def set_current_player(self, player):
         self.current_player = player
 
-    def rollback(self, *players):
-        pass
+    def rollback(self, active_player, players):
+        '''
+        active_player is who ask for rollback
+        '''
+        for player in players:
+            logging.info('roll back %s' % player)
+            if self.paths == []:
+                return False
+            last = self.paths.pop()
+            rst = player.rollback(last, active_player is player)
+            logging.info('result of roll back of %s: %s' % (player, rst))
+            # if rst is False:
+            # return False
 
+        if rst is P:
+            return self.rollback(active_player, players)
+        return rst
 
     def go(self):
         while True:
@@ -201,26 +227,29 @@ class Game(object):
                 "player is now %r. desktop is %s" %
                 (self.current_player, self.desktop))
             self.desktop = self.current_player.next(self.desktop)
+            self.paths.append(self.desktop)
             logging.info("%s plays %s" % (self.current_player, self.desktop))
-
-            # TODO 什么情况会判自己输?
-            if self.current_player.if_loss():
-                logging.info("%s loss" % self.current_player)
+            if self.paths[2:] and self.paths[-1] is P and self.paths[-2] is P:
+                # 对方Pass的情况下, 自己也已经无牌可出, 判输
+                self.winner = self.current_player.opponent
+                return
+            if len(self.paths) == 1 and self.paths[0] is P:
+                # 第一张就只能Pass, 输了
+                self.winner = self.current_player.opponent
                 return
 
+            # TODO 什么情况会判自己输? 的确有可能, 不过现在由Game判断他是不是输了
+            # if self.current_player.if_loss():
+            # logging.info("%s loss" % self.current_player)
+            # return
+
             if self.current_player.if_win():
-                # logging.info(
-                    # '%s wins. %s try roll back' %
-                    # (self.current_player, self.current_player.opponent))
-                # self.desktop = self.current_player.opponent.askfor_roll_back()
-                # if self.desktop is False:
-                    # logging.info(
-                        # "roll back faled. winner is %s" %
-                        # self.current_player)
-                    # return
-                # logging.info(
-                    # "after roll back: current player is %r; opponent is %r" %
-                    # (self.current_player, self.current_player.opponent))
+                if self.rollback(
+                    self.current_player.opponent, [
+                        self.current_player, self.current_player.opponent]) is False:
+                    self.winner = self.current_player
+                    return
+                self.desktop = self.paths[-1] if self.paths else P
 
             self.current_player = self.current_player.opponent
 
@@ -229,17 +258,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", default="-", help="log file")
     parser.add_argument("--level", default="info")
+    parser.add_argument("-a")
+    parser.add_argument("-b")
     args = parser.parse_args()
 
     initlog(level=args.level, log=args.l)
 
-    A = Player('A', [3, 5])
-    B = Player('B', [4, 6])
+    A = Player('A', args.a.split(','))
+    B = Player('B', args.b.split(','))
     A.set_opponent(B)
     B.set_opponent(A)
 
     game = Game([A, B], A)
     game.go()
+    logging.info('%s win' % game.winner)
 
 
 if __name__ == '__main__':
