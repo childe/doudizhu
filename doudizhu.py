@@ -234,6 +234,7 @@ class Game(object):
     def __init__(self, players=[], current_player=None):
         super(Game, self).__init__()
         self.paths = []
+        self.paths_list = []
         self.desktop = P
         self.players = players
         self.current_player = current_player
@@ -273,10 +274,12 @@ class Game(object):
             logging.info("%s plays %s" % (self.current_player, self.desktop))
             if self.paths[2:] and self.paths[-1] is P and self.paths[-2] is P:
                 # 对方Pass的情况下, 自己也已经无牌可出, 判输
+                self.paths_list.append(self.paths[:])
                 self.winner = self.current_player.opponent
                 return
             if len(self.paths) == 1 and self.paths[0] is P:
                 # 第一张就只能Pass, 输了
+                self.paths_list.append(self.paths[:])
                 self.winner = self.current_player.opponent
                 return
 
@@ -286,6 +289,7 @@ class Game(object):
             # return
 
             if self.current_player.if_win():
+                self.paths_list.append(self.paths[:])
                 if self.rollback(
                     self.current_player.opponent, [
                         self.current_player, self.current_player.opponent]) is False:
@@ -314,6 +318,8 @@ def main():
     game = Game([A, B], A)
     game.go()
     logging.info('%s win' % game.winner)
+    for paths in game.paths_list:
+        logging.info('%s' % paths)
 
 
 if __name__ == '__main__':
