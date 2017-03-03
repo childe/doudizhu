@@ -86,12 +86,18 @@ class Round(object):
     def next(self, cards, last_round_is_pass=False):
         raise NotImplemented
 
+    @staticmethod
+    def minimal(cards):
+        raise NotImplemented
+
 
 class PASS(Round):
 
     def next(self, cards, last_round_is_pass=False):
         cards = sorted(cards)
-        return One(cards[:1])
+        if len(cards) == 0:
+            return P
+        return One.minimal(cards)
 
 P = PASS([])
 
@@ -103,6 +109,31 @@ class One(Round):
         for card in cards:
             if card > self.cards[0]:
                 return One([card])
+
+        if last_round_is_pass is False:
+            return P
+        if len(cards) < 2:
+            return P
+        return Tow.minimal(cards)
+
+    @staticmethod
+    def minimal(cards):
+        cards = sorted(cards)
+        return One(cards[:1])
+
+
+class Tow(Round):
+    """docstring for Tow"""
+
+    def next(self, cards, last_round_is_pass=False):
+        pass
+
+    @staticmethod
+    def minimal(cards):
+        cards = sorted(cards)
+        for i,e in enumerate(cards[:-1]):
+            if e == cards[i+1]:
+                return Tow([e,e])
         return P
 
 
@@ -133,6 +164,7 @@ class Player(object):
 
     def next(self, desktop):
         should_be_bigger_than = self.rolled_round if self.rolled_round else desktop
+        logging.info("should_be_bigger_than is %s" % should_be_bigger_than)
         desktop = should_be_bigger_than.next(self.cards[:], desktop is P)
         # Game instance would judge if he losses
         # if desktop is P and self.paths[1:] and self.paths[-1] is P:
