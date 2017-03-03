@@ -126,7 +126,17 @@ class Tow(Round):
     """docstring for Tow"""
 
     def next(self, cards, last_round_is_pass=False):
-        pass
+        cards = sorted(cards)
+        for i,e in enumerate(cards[:-1]):
+            if e <= self.cards[0]:
+                continue
+            if e == cards[i+1]:
+                return Tow([e,e])
+        if last_round_is_pass:
+            #TODO return Three
+            return P
+        return P
+
 
     @staticmethod
     def minimal(cards):
