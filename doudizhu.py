@@ -194,6 +194,9 @@ class ThreeOne(Round):
         return None
 
     def next(self, cards, last_round_is_pass=False, if_rolled=False):
+        if len(cards) <= 3:
+            return Five.minimal(cards)
+
         three = self._find_three(cards, self.cards[0], not if_rolled)
         if three is None:
             if last_round_is_pass is True:
@@ -249,9 +252,31 @@ class Five(Round):
 
 
 class Four(Round):
-    """docstring for Four"""
 
     def next(self, cards, last_round_is_pass=False, if_rolled=False):
+        cards = sorted(cards)
+        for i, e in enumerate(cards[:-3]):
+            if e <= self.cards[0]:
+                continue
+            if e == cards[i+1] == cards[i+2] == cards[i+3]:
+                return Four([e, e, e, e])
+        if last_round_is_pass:
+            return WangZha.minimal(cards)
+        return P
+
+    @staticmethod
+    def minimal(cards):
+        cards = sorted(cards)
+        for i, e in enumerate(cards[:-3]):
+            if e == cards[i+1] == cards[i+2] == cards[i+3]:
+                return Four([e, e, e, e])
+        return WangZha.minimal(cards)
+
+
+class WangZha(Round):
+
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+        cards = sorted(cards)
         return P
 
     @staticmethod
