@@ -153,21 +153,18 @@ class Two(Round):
 class Three(Round):
 
     def next(self, cards, last_round_is_pass=False, if_rolled=False):
-        print self.cards[0]
         cards = sorted(cards)
         for i, e in enumerate(cards[:-2]):
             if e <= self.cards[0]:
                 continue
             if e == cards[i+1] == cards[i+2]:
                 return Three([e, e, e])
-        print '~' * 10
         if last_round_is_pass:
             return ThreeOne.minimal(cards)
         return P
 
     @staticmethod
     def minimal(cards):
-        print '~' * 10, cards
         cards = sorted(cards)
         for i, e in enumerate(cards[:-2]):
             if e == cards[i+1] == cards[i+2]:
@@ -218,22 +215,26 @@ class ThreeOne(Round):
     @staticmethod
     def minimal(cards):
         if len(cards) <= 3:
-            # TODO
-            return P
-            # return Five(cards)
+            return Five(cards)
 
         cards = sorted(cards)
         three = ThreeOne._find_three(cards, 0, False)
         if three is None:
-            # TODO
-            return P
-            # return Five(cards)
+            return Five(cards)
         for e in three:
             cards.remove(e)
         return ThreeOne(three + [cards[0]])
 
+
 class Five(Round):
-    """docstring for Five"""
+
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+        return P
+
+    @staticmethod
+    def minimal(cards):
+        return P
+
 
 
 class Player(object):
