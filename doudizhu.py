@@ -111,7 +111,7 @@ class One(Round):
                 return One([card])
 
         if last_round_is_pass is False:
-            return Four.minimal(cards)
+            return Zha.minimal(cards)
         return Two.minimal(cards)
 
     @staticmethod
@@ -134,7 +134,7 @@ class Two(Round):
                 return Two([e, e])
         if last_round_is_pass is True:
             return Three.minimal(cards)
-        return Four.minimal(cards)
+        return Zha.minimal(cards)
 
     @staticmethod
     def minimal(cards):
@@ -159,7 +159,7 @@ class Three(Round):
                 return Three([e, e, e])
         if last_round_is_pass is True:
             return ThreeOne.minimal(cards)
-        return Four.minimal(cards)
+        return Zha.minimal(cards)
 
     @staticmethod
     def minimal(cards):
@@ -196,14 +196,14 @@ class ThreeOne(Round):
             if last_round_is_pass is True:
                 return Five.minimal(cards)
             else:
-                return Four.minimal(cards)
+                return Zha.minimal(cards)
 
         three = self._find_three(cards, self.cards[0], not if_rolled)
         if three is None:
             if last_round_is_pass is True:
                 return Five.minimal(cards)
             else:
-                return Four.minimal(cards)
+                return Zha.minimal(cards)
 
         if three[0] > self.cards[0]:
             must_be_bigger = False
@@ -241,7 +241,7 @@ class Five(Round):
         if last_round_is_pass is True:
             return FourTwo.minimal(cards)
         else:
-            return Four.minimal(cards)
+            return Zha.minimal(cards)
         return P
 
     @staticmethod
@@ -250,12 +250,12 @@ class Five(Round):
         for i, e in enumerate(cards[:-4]):
             if cards[i:i+5] == range(e, e+5):
                 return Five(range(e, e+5))
-        return Four.minimal(cards)
+        return Zha.minimal(cards)
 
 class FourTwo(Round):
     pass
 
-class Four(Round):
+class Zha(Round):
 
     def next(self, cards, last_round_is_pass=False, if_rolled=False):
         cards = sorted(cards)
@@ -263,9 +263,7 @@ class Four(Round):
             if e <= self.cards[0]:
                 continue
             if e == cards[i+1] == cards[i+2] == cards[i+3]:
-                return Four([e, e, e, e])
-        if last_round_is_pass:
-            return WangZha.minimal(cards)
+                return Zha([e, e, e, e])
         return P
 
     @staticmethod
@@ -273,18 +271,7 @@ class Four(Round):
         cards = sorted(cards)
         for i, e in enumerate(cards[:-3]):
             if e == cards[i+1] == cards[i+2] == cards[i+3]:
-                return Four([e, e, e, e])
-        return WangZha.minimal(cards)
-
-
-class WangZha(Round):
-
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
-        cards = sorted(cards)
-        return P
-
-    @staticmethod
-    def minimal(cards):
+                return Zha([e, e, e, e])
         return P
 
 
