@@ -114,7 +114,7 @@ class One(Round):
             return P
         if len(cards) < 2:
             return P
-        return Tow.minimal(cards)
+        return Two.minimal(cards)
 
     @staticmethod
     def minimal(cards):
@@ -122,8 +122,8 @@ class One(Round):
         return One(cards[:1])
 
 
-class Tow(Round):
-    """docstring for Tow"""
+class Two(Round):
+    """docstring for Two"""
 
     def next(self, cards, last_round_is_pass=False):
         cards = sorted(cards)
@@ -131,7 +131,26 @@ class Tow(Round):
             if e <= self.cards[0]:
                 continue
             if e == cards[i+1]:
-                return Tow([e,e])
+                return Two([e,e])
+        if last_round_is_pass:
+            return Three.minimal(cards)
+        return P
+
+    @staticmethod
+    def minimal(cards):
+        cards = sorted(cards)
+        for i,e in enumerate(cards[:-1]):
+            if e==cards[i+1]:
+                return Two([e,e])
+
+class Three(Round):
+    def next(self, cards, last_round_is_pass=False):
+        cards = sorted(cards)
+        for i,e in enumerate(cards[:-2]):
+            if e <= self.cards[0]:
+                continue
+            if e == cards[i+1] == cards[i+2]:
+                return Three([e,e,e])
         if last_round_is_pass:
             #TODO return Three
             return P
@@ -141,9 +160,9 @@ class Tow(Round):
     @staticmethod
     def minimal(cards):
         cards = sorted(cards)
-        for i,e in enumerate(cards[:-1]):
-            if e == cards[i+1]:
-                return Tow([e,e])
+        for i,e in enumerate(cards[:-2]):
+            if e == cards[i+1] == cards[i+2]:
+                return Three([e,e,e])
         return P
 
 
