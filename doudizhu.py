@@ -81,7 +81,7 @@ class Round(object):
         self.previous = previous
 
     def __repr__(self):
-        return '{}'.format(self.cards)
+        return '{} {}'.format(str(type(self)).split('.')[-1][:-2], self.cards)
 
     def next(self, cards, last_round_is_pass=False, if_rolled=False):
         raise NotImplemented
