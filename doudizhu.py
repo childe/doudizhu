@@ -194,7 +194,7 @@ class ThreeOne(Round):
         return None
 
     def next(self, cards, last_round_is_pass=False, is_rolled=False):
-        print '~~31' * 10, cards, last_round_is_pass, is_rolled
+        origin_cards =  cards[:]
         cards = sorted(cards)
         if len(cards) <= 3:
             if last_round_is_pass is True:
@@ -205,9 +205,9 @@ class ThreeOne(Round):
         three = ThreeOne._find_three(cards, self.cards[0], not is_rolled)
         if three is None:
             if last_round_is_pass is True:
-                return Five.minimal(cards)
+                return Five.minimal(origin_cards)
             else:
-                return Zha.minimal(cards)
+                return Zha.minimal(origin_cards)
 
         if three[0] > self.cards[0]:
             must_be_bigger = False
@@ -218,16 +218,17 @@ class ThreeOne(Round):
                 raise Exception("??")
         for e in three:
             cards.remove(e)
-        one = ThreeOne._find_one(cards, self.cards[0], must_be_bigger)
+        one = ThreeOne._find_one(cards, self.cards[-1], must_be_bigger)
         if one is None:
             if last_round_is_pass is True:
-                return Five.minimal(cards)
+                return Five.minimal(origin_cards)
             else:
-                return Zha.minimal(cards)
+                return Zha.minimal(origin_cards)
         return ThreeOne(three + [one])
 
     @staticmethod
     def minimal(cards):
+        origin_cards =  cards[:]
         cards = sorted(cards)
         three = ThreeOne._find_three(cards, 0, False)
         if three is None:
@@ -236,7 +237,7 @@ class ThreeOne(Round):
             cards.remove(e)
         one = ThreeOne._find_one(cards, 0, False)
         if one is None:
-            return Five.minimal(cards)
+            return Five.minimal(origin_cards)
         return ThreeOne(three + [one])
 
 
@@ -261,13 +262,14 @@ class Five(Round):
         for i, e in enumerate(cards[:-4]):
             if cards[i:i+5] == range(e, e+5):
                 return Five(range(e, e+5))
-        return Zha.minimal(cards)
+        return FourTwo.minimal(cards)
 
 
 class FourTwo(Round):
 
     @staticmethod
     def _find_four(cards, card, must_be_bigger):
+        cards = sorted(cards)
         for i, e in enumerate(cards[:-3]):
             if (must_be_bigger is True and e <= card) \
                     or (must_be_bigger is False and e < card):
@@ -297,6 +299,7 @@ class FourTwo(Round):
         return None
 
     def next(self, cards, last_round_is_pass=False, is_rolled=False):
+        origin_cards =  cards[:]
         cards = sorted(cards)
         four = FourTwo._find_four(cards, self.cards[0], not is_rolled)
         if four is None:
@@ -317,9 +320,9 @@ class FourTwo(Round):
         two = FourTwo._find_two(cards, self.cards[-2, -1], must_be_bigger)
         if two is None:
             if last_round_is_pass is True:
-                return Zha.minimal(cards)
+                return Zha.minimal(origin_cards)
             else:
-                return Zha.minimal(cards)
+                return Zha.minimal(origin_cards)
         return FourTwo(four + two)
 
     @staticmethod
