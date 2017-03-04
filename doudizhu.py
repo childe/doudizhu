@@ -118,6 +118,8 @@ class One(Round):
 
     @staticmethod
     def minimal(cards):
+        if cards == []:
+            return P
         cards = sorted(cards)
         return One(cards[:1])
 
@@ -138,38 +140,45 @@ class Two(Round):
 
     @staticmethod
     def minimal(cards):
+        if len(cards) < 2:
+            return P
         cards = sorted(cards)
         for i, e in enumerate(cards[:-1]):
             if e == cards[i+1]:
                 return Two([e, e])
-        return P
+        # TODO should return Five.minimal?
+        return Three.minimal(cards)
 
 
 class Three(Round):
 
     def next(self, cards, last_round_is_pass=False, if_rolled=False):
+        print self.cards[0]
         cards = sorted(cards)
         for i, e in enumerate(cards[:-2]):
             if e <= self.cards[0]:
                 continue
             if e == cards[i+1] == cards[i+2]:
                 return Three([e, e, e])
+        print '~' * 10
         if last_round_is_pass:
             return ThreeOne.minimal(cards)
         return P
 
     @staticmethod
     def minimal(cards):
+        print '~' * 10, cards
         cards = sorted(cards)
         for i, e in enumerate(cards[:-2]):
             if e == cards[i+1] == cards[i+2]:
                 return Three([e, e, e])
-        return P
+        return ThreeOne.minimal(cards)
 
 
 class ThreeOne(Round):
 
-    def _find_three(self, cards, card, must_be_bigger):
+    @staticmethod
+    def _find_three(cards, card, must_be_bigger):
         for i, e in enumerate(cards[:-2]):
             if (must_be_bigger is True and e <= card) \
                     or (must_be_bigger is False and e < card):
@@ -178,7 +187,8 @@ class ThreeOne(Round):
                 return [e] * 3
         return None
 
-    def _find_one(self, cards, card, must_be_bigger):
+    @staticmethod
+    def _find_one(cards, card, must_be_bigger):
         if must_be_bigger is False:
             return cards[0]
         for i, e in enumerate(cards):
@@ -207,11 +217,23 @@ class ThreeOne(Round):
 
     @staticmethod
     def minimal(cards):
+        if len(cards) <= 3:
+            # TODO
+            return P
+            # return Five(cards)
+
         cards = sorted(cards)
-        for i, e in enumerate(cards[:-2]):
-            if e == cards[i+1] == cards[i+2]:
-                return Three([e, e, e])
-        return P
+        three = ThreeOne._find_three(cards, 0, False)
+        if three is None:
+            # TODO
+            return P
+            # return Five(cards)
+        for e in three:
+            cards.remove(e)
+        return ThreeOne(three + [cards[0]])
+
+class Five(Round):
+    """docstring for Five"""
 
 
 class Player(object):
