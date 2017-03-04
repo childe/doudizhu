@@ -83,7 +83,7 @@ class Round(object):
     def __repr__(self):
         return '{} {}'.format(str(type(self)).split('.')[-1][:-2], self.cards)
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
         raise NotImplemented
 
     @staticmethod
@@ -93,7 +93,7 @@ class Round(object):
 
 class PASS(Round):
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
         cards = sorted(cards)
         if len(cards) == 0:
             return P
@@ -104,7 +104,7 @@ P = PASS([])
 
 class One(Round):
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
         cards = sorted(cards)
         for card in cards:
             if card > self.cards[0]:
@@ -125,7 +125,7 @@ class One(Round):
 class Two(Round):
     """docstring for Two"""
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
         cards = sorted(cards)
         for i, e in enumerate(cards[:-1]):
             if e <= self.cards[0]:
@@ -150,7 +150,7 @@ class Two(Round):
 
 class Three(Round):
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
         cards = sorted(cards)
         for i, e in enumerate(cards[:-2]):
             if e <= self.cards[0]:
@@ -193,7 +193,8 @@ class ThreeOne(Round):
                 return e
         return None
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
+        print '~~31' * 10, cards, last_round_is_pass, is_rolled
         cards = sorted(cards)
         if len(cards) <= 3:
             if last_round_is_pass is True:
@@ -201,7 +202,7 @@ class ThreeOne(Round):
             else:
                 return Zha.minimal(cards)
 
-        three = ThreeOne._find_three(cards, self.cards[0], not if_rolled)
+        three = ThreeOne._find_three(cards, self.cards[0], not is_rolled)
         if three is None:
             if last_round_is_pass is True:
                 return Five.minimal(cards)
@@ -211,7 +212,7 @@ class ThreeOne(Round):
         if three[0] > self.cards[0]:
             must_be_bigger = False
         else:
-            if if_rolled:
+            if is_rolled:
                 must_be_bigger = True
             else:
                 raise Exception("??")
@@ -241,7 +242,7 @@ class ThreeOne(Round):
 
 class Five(Round):
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
         cards = sorted(cards)
         for i, e in enumerate(cards[:-4]):
             if e <= self.cards[0]:
@@ -295,9 +296,9 @@ class FourTwo(Round):
                     return cards[i:2]
         return None
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
         cards = sorted(cards)
-        four = FourTwo._find_four(cards, self.cards[0], not if_rolled)
+        four = FourTwo._find_four(cards, self.cards[0], not is_rolled)
         if four is None:
             if last_round_is_pass is True:
                 return Zha.minimal(cards)
@@ -307,7 +308,7 @@ class FourTwo(Round):
         if four[0] > self.cards[0]:
             must_be_bigger = False
         else:
-            if if_rolled:
+            if is_rolled:
                 must_be_bigger = True
             else:
                 raise Exception("???")
@@ -338,7 +339,7 @@ class FourTwo(Round):
 
 class Zha(Round):
 
-    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+    def next(self, cards, last_round_is_pass=False, is_rolled=False):
         if self.cards[0] == 99:
             return P
         cards = sorted(cards)
@@ -390,7 +391,7 @@ class Player(object):
     def next(self, desktop):
         should_be_bigger_than = self.rolled_round if self.rolled_round else desktop
         logging.info("should_be_bigger_than is %s" % should_be_bigger_than)
-        desktop = should_be_bigger_than.next(self.cards[:], desktop is P)
+        desktop = should_be_bigger_than.next(self.cards[:], desktop is P, self.rolled_round is not None)
         # Game instance would judge if he losses
         # if desktop is P and self.paths[1:] and self.paths[-1] is P:
         # self.loss = True
