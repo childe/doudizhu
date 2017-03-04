@@ -127,11 +127,11 @@ class Two(Round):
 
     def next(self, cards, last_round_is_pass=False):
         cards = sorted(cards)
-        for i,e in enumerate(cards[:-1]):
+        for i, e in enumerate(cards[:-1]):
             if e <= self.cards[0]:
                 continue
             if e == cards[i+1]:
-                return Two([e,e])
+                return Two([e, e])
         if last_round_is_pass:
             return Three.minimal(cards)
         return P
@@ -139,31 +139,31 @@ class Two(Round):
     @staticmethod
     def minimal(cards):
         cards = sorted(cards)
-        for i,e in enumerate(cards[:-1]):
-            if e==cards[i+1]:
-                return Two([e,e])
+        for i, e in enumerate(cards[:-1]):
+            if e == cards[i+1]:
+                return Two([e, e])
         return P
 
+
 class Three(Round):
+
     def next(self, cards, last_round_is_pass=False):
         cards = sorted(cards)
-        for i,e in enumerate(cards[:-2]):
+        for i, e in enumerate(cards[:-2]):
             if e <= self.cards[0]:
                 continue
             if e == cards[i+1] == cards[i+2]:
-                return Three([e,e,e])
+                return Three([e, e, e])
         if last_round_is_pass:
-            # return ThreeOne.minimal(cards)
-            return P
+            return ThreeOne.minimal(cards)
         return P
-
 
     @staticmethod
     def minimal(cards):
         cards = sorted(cards)
-        for i,e in enumerate(cards[:-2]):
+        for i, e in enumerate(cards[:-2]):
             if e == cards[i+1] == cards[i+2]:
-                return Three([e,e,e])
+                return Three([e, e, e])
         return P
 
 
