@@ -142,6 +142,7 @@ class Two(Round):
         for i,e in enumerate(cards[:-1]):
             if e==cards[i+1]:
                 return Two([e,e])
+        return P
 
 class Three(Round):
     def next(self, cards, last_round_is_pass=False):
@@ -152,7 +153,7 @@ class Three(Round):
             if e == cards[i+1] == cards[i+2]:
                 return Three([e,e,e])
         if last_round_is_pass:
-            #TODO return Three
+            # return ThreeOne.minimal(cards)
             return P
         return P
 
@@ -286,8 +287,8 @@ class Game(object):
     def go(self):
         while True:
             logging.info(
-                "player is now %r. desktop is %s" %
-                (self.current_player, self.desktop))
+                "player is now %r. paths is %s" %
+                (self.current_player, self.paths))
             self.desktop = self.current_player.next(self.desktop)
             self.paths.append(self.desktop)
             logging.info("%s plays %s" % (self.current_player, self.desktop))
