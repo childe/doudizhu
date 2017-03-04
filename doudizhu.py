@@ -83,7 +83,7 @@ class Round(object):
     def __repr__(self):
         return '{}'.format(self.cards)
 
-    def next(self, cards, last_round_is_pass=False):
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
         raise NotImplemented
 
     @staticmethod
@@ -93,7 +93,7 @@ class Round(object):
 
 class PASS(Round):
 
-    def next(self, cards, last_round_is_pass=False):
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
         cards = sorted(cards)
         if len(cards) == 0:
             return P
@@ -104,7 +104,7 @@ P = PASS([])
 
 class One(Round):
 
-    def next(self, cards, last_round_is_pass=False):
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
         cards = sorted(cards)
         for card in cards:
             if card > self.cards[0]:
@@ -125,7 +125,7 @@ class One(Round):
 class Two(Round):
     """docstring for Two"""
 
-    def next(self, cards, last_round_is_pass=False):
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
         cards = sorted(cards)
         for i, e in enumerate(cards[:-1]):
             if e <= self.cards[0]:
@@ -147,7 +147,7 @@ class Two(Round):
 
 class Three(Round):
 
-    def next(self, cards, last_round_is_pass=False):
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
         cards = sorted(cards)
         for i, e in enumerate(cards[:-2]):
             if e <= self.cards[0]:
@@ -157,6 +157,53 @@ class Three(Round):
         if last_round_is_pass:
             return ThreeOne.minimal(cards)
         return P
+
+    @staticmethod
+    def minimal(cards):
+        cards = sorted(cards)
+        for i, e in enumerate(cards[:-2]):
+            if e == cards[i+1] == cards[i+2]:
+                return Three([e, e, e])
+        return P
+
+
+class ThreeOne(Round):
+
+    def _find_three(self, cards, card, must_be_bigger):
+        for i, e in enumerate(cards[:-2]):
+            if (must_be_bigger is True and e <= card) \
+                    or (must_be_bigger is False and e < card):
+                continue
+            if cards[i:i+3] == [e] * 3:
+                return [e] * 3
+        return None
+
+    def _find_one(self, cards, card, must_be_bigger):
+        if must_be_bigger is False:
+            return cards[0]
+        for i, e in enumerate(cards):
+            if e > card:
+                return e
+        return None
+
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
+        three = self._find_three(cards, self.cards[0], not if_rolled)
+        if three is None:
+            if last_round_is_pass is True:
+                return P
+                # return  Five.minimal(cards)
+            else:
+                return P
+
+        if three[0] > self.cards[0]:
+            must_be_bigger = False
+        else:
+            if if_rolled:
+                must_be_bigger = True
+            else:
+                raise Exception("??")
+        one = self._find_one(cards, self.cards[0], must_be_bigger)
+        return Three(three + [one])
 
     @staticmethod
     def minimal(cards):
