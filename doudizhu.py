@@ -215,12 +215,12 @@ class ThreeOne(Round):
     @staticmethod
     def minimal(cards):
         if len(cards) <= 3:
-            return Five(cards)
+            return Five.minimal(cards)
 
         cards = sorted(cards)
         three = ThreeOne._find_three(cards, 0, False)
         if three is None:
-            return Five(cards)
+            return Five.minimal(cards)
         for e in three:
             cards.remove(e)
         return ThreeOne(three + [cards[0]])
@@ -229,12 +229,34 @@ class ThreeOne(Round):
 class Five(Round):
 
     def next(self, cards, last_round_is_pass=False, if_rolled=False):
+        cards = sorted(cards)
+        for i, e in enumerate(cards[:-4]):
+            if e <= self.cards[0]:
+                continue
+            if cards[i:i+5] == range(e, e+5):
+                return Five(range(e, e+5))
+        if last_round_is_pass is True:
+            return Four.minimal(cards)
+        return P
+
+    @staticmethod
+    def minimal(cards):
+        cards = sorted(cards)
+        for i, e in enumerate(cards[:-4]):
+            if cards[i:i+5] == range(e, e+5):
+                return Five(range(e, e+5))
+        return Four.minimal(cards)
+
+
+class Four(Round):
+    """docstring for Four"""
+
+    def next(self, cards, last_round_is_pass=False, if_rolled=False):
         return P
 
     @staticmethod
     def minimal(cards):
         return P
-
 
 
 class Player(object):
@@ -407,8 +429,8 @@ def main():
 
     initlog(level=args.level, log=args.l)
 
-    A = Player('A', args.a.split(','))
-    B = Player('B', args.b.split(','))
+    A = Player('A', [int(e) for e in args.a.split(',')])
+    B = Player('B', [int(e) for e in args.b.split(',')])
     A.set_opponent(B)
     B.set_opponent(A)
 
