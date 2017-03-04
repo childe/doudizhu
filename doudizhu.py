@@ -339,11 +339,7 @@ class Game(object):
             self.desktop = self.current_player.next(self.desktop)
             self.paths.append(self.desktop)
             logging.info("%s plays %s" % (self.current_player, self.desktop))
-            if self.paths[2:] and self.paths[-1] is P and self.paths[-2] is P:
-                # 对方Pass的情况下, 自己也已经无牌可出, 判输
-                self.paths_list.append(self.paths[:])
-                self.winner = self.current_player.opponent
-                return
+
             if len(self.paths) == 1 and self.paths[0] is P:
                 # 第一张就只能Pass, 输了
                 self.paths_list.append(self.paths[:])
@@ -354,6 +350,17 @@ class Game(object):
             # if self.current_player.if_loss():
             # logging.info("%s loss" % self.current_player)
             # return
+
+            if self.paths[2:] and self.paths[-1] is P and self.paths[-2] is P:
+                # 对方Pass的情况下无牌可出, 继续回退
+                logging.info(
+                    '%s passes after a Pass, roll back' %
+                    self.current_player)
+                self.paths_list.append(self.paths[:])
+                self.rollback(
+                    self.current_player, [
+                        self.current_player, self.current_player.opponent, self.current_player])
+                continue
 
             if self.current_player.if_win():
                 self.paths_list.append(self.paths[:])
