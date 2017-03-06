@@ -55,8 +55,8 @@ def initlog(level=None, log="-"):
         "level": "DEBUG",
         "formatter": "custom",
         "filename": log,
-        "maxBytes": 10*1000**2,  # 10M
-        "backupCount": 5,
+        "maxBytes": 100*1000**2,  # 10M
+        "backupCount": 10,
         "encoding": "utf8"
     }
     if log == "-":
@@ -110,9 +110,9 @@ class One(Round):
             if card > self.cards[0]:
                 return One([card])
 
-        if last_round_is_pass is False:
-            return Zha.minimal(cards)
-        return Two.minimal(cards)
+        if last_round_is_pass is True:
+            return Two.minimal(cards)
+        return Zha.minimal(cards)
 
     @staticmethod
     def minimal(cards):
@@ -194,7 +194,7 @@ class ThreeOne(Round):
         return None
 
     def next(self, cards, last_round_is_pass=False, is_rolled=False):
-        origin_cards =  cards[:]
+        origin_cards = cards[:]
         cards = sorted(cards)
         if len(cards) <= 3:
             if last_round_is_pass is True:
@@ -228,7 +228,7 @@ class ThreeOne(Round):
 
     @staticmethod
     def minimal(cards):
-        origin_cards =  cards[:]
+        origin_cards = cards[:]
         cards = sorted(cards)
         three = ThreeOne._find_three(cards, 0, False)
         if three is None:
@@ -299,7 +299,7 @@ class FourTwo(Round):
         return None
 
     def next(self, cards, last_round_is_pass=False, is_rolled=False):
-        origin_cards =  cards[:]
+        origin_cards = cards[:]
         cards = sorted(cards)
         four = FourTwo._find_four(cards, self.cards[0], not is_rolled)
         if four is None:
@@ -317,7 +317,7 @@ class FourTwo(Round):
                 raise Exception("???")
         for e in four:
             cards.remove(e)
-        two = FourTwo._find_two(cards, self.cards[-2, -1], must_be_bigger)
+            two = FourTwo._find_two(cards, self.cards[-2:], must_be_bigger)
         if two is None:
             if last_round_is_pass is True:
                 return Zha.minimal(origin_cards)
@@ -394,7 +394,8 @@ class Player(object):
     def next(self, desktop):
         should_be_bigger_than = self.rolled_round if self.rolled_round else desktop
         logging.info("should_be_bigger_than is %s" % should_be_bigger_than)
-        desktop = should_be_bigger_than.next(self.cards[:], desktop is P, self.rolled_round is not None)
+        desktop = should_be_bigger_than.next(
+            self.cards[:], desktop is P, self.rolled_round is not None)
         # Game instance would judge if he losses
         # if desktop is P and self.paths[1:] and self.paths[-1] is P:
         # self.loss = True
@@ -450,10 +451,11 @@ class Player(object):
 class Game(object):
     """docstring for Game"""
 
-    def __init__(self, players=[], current_player=None):
+    def __init__(self, players, current_player, init_desktop=P):
         super(Game, self).__init__()
         self.paths = []
         self.paths_list = []
+        self.init_desktop = init_desktop
         self.desktop = P
         self.players = players
         self.current_player = current_player
@@ -483,13 +485,36 @@ class Game(object):
             return self.rollback(active_player, players)
         return rst
 
+    def if_deadloop(self):
+        for paths in self.paths_list:
+            if len(paths) != len(self.paths):
+                continue
+            for i in range(len(paths)):
+                if not isinstance(paths[i], type(self.paths[i])):
+                    break
+                if paths[i].cards != self.paths[i].cards:
+                    break
+            else:
+                return True
+        return False
+
     def go(self):
+        i = 1
         while True:
+            if i % 10000 == 0:
+                logging.info("round %i" % i)
+            # logging.info(len(self.paths_list))
+            # for paths in self.paths_list:
+                # logging.info('%s' % paths)
+            i += 1
+            self.desktop = self.paths[-1] if self.paths else self.init_desktop
             logging.info(
-                "player is now %r. paths is %s" %
-                (self.current_player, self.paths))
+                "player is now %r. paths is %s. desktop is %s" %
+                (self.current_player, self.paths, self.desktop))
             self.desktop = self.current_player.next(self.desktop)
             self.paths.append(self.desktop)
+            # if self.if_deadloop():
+                # raise Exception("deadloop")
             logging.info("%s plays %s" % (self.current_player, self.desktop))
 
             if len(self.paths) == 1 and self.paths[0] is P:
@@ -508,6 +533,7 @@ class Game(object):
                 logging.info(
                     '%s passes after a Pass, roll back' %
                     self.current_player)
+                logging.info('rollback: %s' % self.paths)
                 self.paths_list.append(self.paths[:])
                 self.rollback(
                     self.current_player, [
@@ -515,13 +541,14 @@ class Game(object):
                 continue
 
             if self.current_player.if_win():
+                logging.info('rollback: %s' % self.paths)
                 self.paths_list.append(self.paths[:])
                 if self.rollback(
                     self.current_player.opponent, [
                         self.current_player, self.current_player.opponent]) is False:
                     self.winner = self.current_player
                     return
-                self.desktop = self.paths[-1] if self.paths else P
+                self.desktop = self.paths[-1] if self.paths else self.init_desktop
 
             self.current_player = self.current_player.opponent
 
@@ -546,6 +573,7 @@ def main():
     logging.info('%s win' % game.winner)
     for paths in game.paths_list:
         logging.info('%s' % paths)
+    logging.info('%s win' % game.winner)
 
 
 if __name__ == '__main__':
